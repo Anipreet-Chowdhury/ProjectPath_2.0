@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  
+jobs:
+  repo-sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Basic sanity check
+        uses: bash 
+        run: |
+          set -euo pipefail
+
+          echo "Checking required files..."
+          test -f README.md
+          test -f .gitignore
+          test -f .editorconfig
+          test -f .gitattributes
+
+          echo "Checking for accidental secrets..."
+          # Adjust/extend later; this is just a starter tripwire.
+          if git grep -nEI "(api[_-]?key|secret|firebase|service[_-]?account|private[_-]?key)" -- . ':!README.md' ':!docs/**'; then
+            echo "Potential secret-like string found. Review the matches above."
+            exit 1
+          fi
+
+          echo "✅ Repo sanity checks passed."
