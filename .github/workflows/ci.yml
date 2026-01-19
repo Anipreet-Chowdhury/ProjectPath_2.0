@@ -22,9 +22,24 @@ jobs:
           test -f .editorconfig
           test -f .gitattributes
 
-          echo "Checking for accidental secrets..."
-          # Starter tripwire — review matches, don't blindly trust it.
-          if git grep -nEI "(api[_-]?key|secret|firebase|service[_-]?account|private[_-]?key)" -- . ':!README.md' ':!docs/**'; then
+          echo "Ensuring no .env files are committed..."
+          if git ls-files | grep -E '(^|/)\.env(\.|$)'; then
+            echo "Found committed .env file(s). Remove them and use .env.example instead."
+            exit 1
+          fi
+
+          echo "Checking for accidental secrets (best-effort tripwire)..."
+          # Exclusions prevent false positives (workflows, docs, deps, build output).
+          if git grep -nEI "(api[_-]?key|secret|firebase|service[_-]?account|private[_-]?key)" -- . \
+            ':!README.md' \
+            ':!docs/**' \
+            ':!.github/**' \
+            ':!**/node_modules/**' \
+            ':!**/dist/**' \
+            ':!**/build/**' \
+            ':!**/.next/**' \
+            ':!**/__pycache__/**' \
+            ':!**/.venv/**'; then
             echo "Potential secret-like string found. Review the matches above."
             exit 1
           fi
