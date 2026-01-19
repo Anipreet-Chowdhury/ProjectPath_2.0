@@ -4,15 +4,15 @@ on:
   pull_request:
   push:
     branches: [main]
-  
+
 jobs:
   repo-sanity:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Basic sanity check
-        uses: bash 
+      - name: Basic sanity checks
+        shell: bash
         run: |
           set -euo pipefail
 
@@ -23,7 +23,7 @@ jobs:
           test -f .gitattributes
 
           echo "Checking for accidental secrets..."
-          # Adjust/extend later; this is just a starter tripwire.
+          # Starter tripwire — review matches, don't blindly trust it.
           if git grep -nEI "(api[_-]?key|secret|firebase|service[_-]?account|private[_-]?key)" -- . ':!README.md' ':!docs/**'; then
             echo "Potential secret-like string found. Review the matches above."
             exit 1
